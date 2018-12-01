@@ -1,37 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace D01b
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             Console.WriteLine(GetRepeatingFrequency());
         }
 
         private static int GetRepeatingFrequency()
         {
-            int sum = 0;
-            var frequencies = new HashSet<int>();
-            var lines = File.ReadAllLines("input.txt");
+            var reachedFrequencies = new HashSet<int>();
+            var frequencies = GetFrequencies();
+            var sum = 0;
 
             while (true)
             {
-                foreach (var line in lines)
+                foreach (var frequency in frequencies)
                 {
-                    sum += int.Parse(line);
-                    if (!frequencies.Contains(sum))
-                    {
-                        frequencies.Add(sum);
-                    }
-                    else
-                    {
+                    if (!reachedFrequencies.Add(sum += frequency))
                         return sum;
-                    }
                 }
             }
+        }
+
+        private static IEnumerable<int> GetFrequencies()
+        {
+            return File.ReadAllLines("input.txt").Select(int.Parse);
         }
     }
 }
