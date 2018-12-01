@@ -1,17 +1,16 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace D01a
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            int sum = 0;
-            foreach (var line in File.ReadAllLines("input.txt"))
-                sum += int.Parse(line);
+            var result = File.ReadAllLines("input.txt").Sum(int.Parse);
 
-            Console.WriteLine(sum);
+            Console.WriteLine(result);
         }
     }
 }
