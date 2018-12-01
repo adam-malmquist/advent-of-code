@@ -14,7 +14,7 @@ namespace D01b
 
         private static int GetRepeatingFrequency()
         {
-            var reachedFrequencies = new HashSet<int>();
+            var reachedFrequencies = new HashSet<int>(156437);
             var frequencies = GetFrequencies();
             var sum = 0;
 
