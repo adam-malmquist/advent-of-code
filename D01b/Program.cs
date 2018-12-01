@@ -14,7 +14,7 @@ namespace D01b
         private static int GetRepeatingFrequency()
         {
             int sum = 0;
-            var frequencies = new List<int>();
+            var frequencies = new HashSet<int>();
             var lines = File.ReadAllLines("input.txt");
 
             while (true)
