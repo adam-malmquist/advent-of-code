@@ -30,7 +30,7 @@ namespace D01b
 
         private static IEnumerable<int> GetFrequencies()
         {
-            return File.ReadAllLines("input.txt").Select(int.Parse);
+            return File.ReadAllLines("input.txt").Select(int.Parse).ToArray();
         }
     }
 }
