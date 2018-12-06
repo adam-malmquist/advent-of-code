@@ -98,7 +98,7 @@ namespace Day4A
 
         public int GetMinutesSlept()
         {
-            return shifts.SelectMany(minute => minute).Count(awake => awake);
+            return shifts.SelectMany(minute => minute).Count(asleep => asleep);
         }
 
         public int GetSleepyMinute()
