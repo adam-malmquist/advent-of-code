@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace D7A
+namespace D7B
 {
     class Program
     {
@@ -13,7 +13,13 @@ namespace D7A
             Console.WriteLine(GetAnswer());
         }
 
-        private static string GetAnswer()
+        private static int GetAnswer()
+        {
+            return new Solver(GetInstructions()).GetAnswer();
+
+        }
+
+        private static SortedDictionary<char, SortedSet<char>> GetInstructions()
         {
             var instructions = new SortedDictionary<char, SortedSet<char>>();
 
@@ -30,60 +36,79 @@ namespace D7A
                 instructions[id].Add(dependsOn);
             }
 
-            var builder = new StringBuilder();
-            int time = 0;
-            var workers = new (char job, int done)[5];
+            return instructions;
+        }
 
+    }
 
-            while (instructions.Count > 0)
+    class Solver
+    {
+        private readonly SortedDictionary<char, SortedSet<char>> todo;
+        private readonly Dictionary<char, int> wip;
+        private int time = 0;
+
+        public Solver(SortedDictionary<char, SortedSet<char>> work)
+        {
+            todo = work;
+            wip = new Dictionary<char, int>();
+        }
+
+        internal int GetAnswer()
+        {
+            var idleWorkers = 5;
+
+            while (true)
             {
-                var unassignedJobs = new SortedSet<char>();
-
-                foreach (var instruction in instructions.Where(kvp => kvp.Value.Count == 0))
+                foreach (var id in GetFinishedTasks())
                 {
-                    unassignedJobs.Add(instruction.Key);
-                    for (int i = 0; i < workers.Length; ++i)
-                    {
-                        if (unassignedJobs.Contains(workers[i].job))
-                        {
-                            unassignedJobs.Remove(workers[i].job);
-                            break;
-                        }
-                    }
+                    FinishTask(id);
+                    ++idleWorkers;
                 }
 
-                for (int i = 0; i < workers.Length; ++i)
+                if (IsAllDone())
                 {
-                    if (unassignedJobs.Count == 0)
+                    return time;
+                }
+
+                foreach (var id in GetReadyTasks())
+                {
+                    if (idleWorkers == 0)
                         break;
 
-                    if (workers[i].job != default(char))
-                        continue;
-
-                    var nextJob = unassignedJobs.First();
-                    unassignedJobs.Remove(nextJob);
-                    workers[i] = (nextJob, time + GetDuration(nextJob));
-                }
-
-                for (int i = 0; i < workers.Length; ++i)
-                {
-                    if (workers[i].done == time)
-                    {
-                        char job = workers[i].job;
-
-                        instructions.Remove(job);
-                        foreach (var dependencies in instructions.Values)
-                            dependencies.Remove(job);
-
-                        builder.Append(job);
-                        workers[i] = default((char,int));
-                    }
+                    StartTask(id);
+                    --idleWorkers;
                 }
 
                 ++time;
             }
+        }
 
-            return builder.ToString();
+        private void FinishTask(char id)
+        {
+            wip.Remove(id);
+            foreach (var deps in todo.Values)
+                deps.Remove(id);
+        }
+
+        private void StartTask(char id)
+        {
+            todo.Remove(id);
+            wip[id] = time + GetDuration(id);
+        }
+
+        private bool IsAllDone()
+        {
+            return todo.Count == 0 && wip.Count == 0;
+        }
+
+        private List<char> GetFinishedTasks()
+        {
+            return wip.Where(x => x.Value == time).Select(x => x.Key).ToList();
+        }
+
+        private List<char> GetReadyTasks()
+        {
+            return todo.Where(x => x.Value.Count == 0).Select(x => x.Key).ToList();
         }
 
         private static int GetDuration(char nextJob)
