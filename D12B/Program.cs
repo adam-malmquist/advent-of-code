@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace D12A
+namespace D12B
 {
     static class Program
     {
@@ -12,23 +12,17 @@ namespace D12A
             Console.WriteLine(GetAnswer());
         }
 
-        static int GetAnswer()
+        static long GetAnswer()
         {
             var (initial, rules) = ParseInput(File.ReadAllLines("input.txt"));
+            var (offset, state) = new Pots(initial, rules).GetGeneration(50000000000);
 
-            var pots = new Pots(initial, rules);
-            var generation = pots.GetGeneration(20);
-
-            var (negatives, positives) = generation.SplitToTuple(Pots.Marker);
-
-            int result = 0;
-            for (int i = 0; i < negatives.Length; ++i)
-                if (negatives[i] == '#')
-                    result -= negatives.Length - i;
-
-            for (int i = 0; i < positives.Length; ++i)
-                if (positives[i] == '#')
-                    result += i;
+            long result = 0;
+            for (int i = 0; i < state.Length; ++i)
+            {
+                if (state[i] == '#')
+                    result += i + offset;
+            }
 
             return result;
         }
@@ -69,8 +63,6 @@ namespace D12A
 
     public class Pots
     {
-        public const string Marker = "-";
-
         private readonly string initial;
         private readonly Dictionary<string, char> rules;
 
@@ -80,34 +72,39 @@ namespace D12A
             this.rules = rules;
         }
 
-        public string GetGeneration(int n)
+        public (long offset, string pots) GetGeneration(long n)
         {
-            return n == 0 ? OriginalPots() : UpdatedPots(GetGeneration(n - 1));
-        }
+            var state = InitialPots();
+            var previous = default(string);
 
-        private string OriginalPots()
-        {
-            return Marker + initial;
-        }
+            for (long i = 0; i < n; ++i)
+            {
+                previous = state.pots;
+                state = UpdatedPots(state);
 
-        private string UpdatedPots(string state)
-        {
-            if (!state.StartsWith("....."))
-                state = "....." + state;
-
-            if (!state.EndsWith("....."))
-                state += ".....";
-
-            var markerPosition = state.IndexOf(Marker);
-
-            state = state.Remove(markerPosition, Marker.Length);
-            state = UpdatedPotsWithoutMarker(state);
-            state = state.Insert(markerPosition, Marker);
+                if (state.pots == previous)
+                    return (state.offset + n - (i + 1), state.pots);
+            }
 
             return state;
         }
 
-        private string UpdatedPotsWithoutMarker(string state)
+        private (long offset, string pots) InitialPots()
+        {
+            return (0, initial);
+        }
+
+        private (long offset, string pots) UpdatedPots((long offset, string pots) state)
+        {
+            var newState = GetNextState($".....{state.pots}.....");
+            var newOffset = state.offset + (newState.IndexOf('#') - 5);
+
+            newState = newState.Trim('.');
+
+            return (newOffset, newState);
+        }
+
+        private string GetNextState(string state)
         {
             var builder = new StringBuilder();
 
