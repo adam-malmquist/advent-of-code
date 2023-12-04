@@ -10,7 +10,7 @@ int main()
     FILE *file;
     char buffer[1000];
 
-    file = fopen("input/1.txt", "r");
+    file = fopen("input/01", "r");
 
     if (file == NULL) {
         printf("File not found.\n");
