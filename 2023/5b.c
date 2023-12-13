@@ -18,22 +18,10 @@ typedef struct {
     long long length;
 } Seed;
 
-// int mapCompare(const void *p1, const void *p2) {
-//     MapEntry e1 = *(MapEntry *)p1;
-//     MapEntry e2 = *(MapEntry *)p2;
-//     if (e1.dst == e2.dst)
-//         return 0;
-//     if (e1.dst > e2.dst)
-//         return 1;
-//     return -1;
-// }
-
 int main()
 {
     FILE *file;
     char buffer[1000];
-
-    long long result = LONG_MAX;
 
     file = fopen("input/05", "r");
 
@@ -44,8 +32,8 @@ int main()
 
     fgets(buffer, 1000, file);
 
-    int seedsLength = SEEDS;
     Seed seeds[MAX_SEEDS];
+    int seedsLength = 0;
 
     char *pch = buffer;
     pch = strtok(pch, " ");
@@ -54,6 +42,7 @@ int main()
         seeds[i].start = atoll(pch);
         pch = strtok(NULL, " ");
         seeds[i].length = atoll(pch);
+        ++seedsLength;
     }
     fgets(buffer, 1000, file);
 
@@ -66,9 +55,8 @@ int main()
         int x = 0;
 
         while (fgets(buffer, 1000, file) != NULL) {
-            if (strcmp(buffer, "\n") == 0) {
+            if (strcmp(buffer, "\n") == 0)
                 break;
-            }
 
             pch = strtok(buffer, " ");
             maps[i][x].dst = atoll(pch);
@@ -78,10 +66,8 @@ int main()
             maps[i][x].range = atoll(pch);
 
             ++x;
-
         }
 
-        //qsort(maps[i], x, sizeof(MapEntry), mapCompare);
         mapLengths[i] = x;
     }
 
@@ -119,25 +105,19 @@ int main()
                 }
 
                 s->start = a1;
-                s->length = a2 - (a1 - 1);
+                s->length = a2 - a1 + 1;
 
-                s->start = e->dst + (a1 - b1);
-
-                if (seedsLength > MAX_SEEDS) {
-                    printf("OVERFLOW");
-                    return 0;
-                }
+                s->start = e->dst + (s->start - e->src);
+                break;
             }
         }
     }
 
+    long long result = LONG_MAX;
     for (int i = 0; i < seedsLength; ++i)
-        if (seeds[i].start < result) {
+        if (seeds[i].start < result)
             result = seeds[i].start;
-            printf("New result: %lld\n", result);
-        }
 
-    printf("Seeds: %d\n", seedsLength);
     printf("Answer: %lld\n", result);
 
     return 0;
