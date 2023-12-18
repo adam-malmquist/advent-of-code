@@ -3,18 +3,33 @@
 #include <string.h>
 #include <stdbool.h>
 
+typedef enum { HighCard, OnePair, TwoPair, ThreeOfAKind, FullHouse, FourOfAKind, FiveOfAKind } Strength;
+
 typedef struct {
     char cards[5];
     int bid;
+    int cards_value[5];
+    Strength strength;
 } Hand;
 
-typedef enum { HighCard, OnePair, TwoPair, ThreeOfAKind, FullHouse, FourOfAKind, FiveOfAKind } Strength;
-
 int get_index(char ch);
-Strength get_strength(int cards[13]);
+Strength get_strength(int cards[5]);
 
 int cmpfunc (const void * a, const void * b) {
     Hand *h1 = (Hand*)a, *h2 = (Hand*)b;
+
+    if (h1->strength > h2->strength)
+        return 1;
+    if (h1->strength < h2->strength)
+        return -1;
+
+    for (int i = 0; i < 5; ++i) {
+        if (h1->cards_value[i] > h2->cards_value[i])
+            return 1;
+        if (h1->cards_value[i] < h2->cards_value[i])
+            return -1;
+    }
+
     return 0;
 }
 
@@ -29,30 +44,32 @@ int main()
 
     char buffer[20];
     
-    int n = 0;
     Hand hands[1000];
+    int n = 0;
 
     while (fgets(buffer, 20, file) != NULL) {
         char *ch = strtok(buffer, " ");
         strcpy(hands[n].cards, ch);
         ch = strtok(NULL, " ");
         hands[n].bid = atoi(ch);
+
+        for (int i = 0; i < 5; ++i)
+            hands[n].cards_value[i] = get_index(hands[n].cards[i]);
+        hands[n].strength = get_strength(hands[n].cards_value);
+
         ++n;
     }
 
     fclose(file);
 
-    int cards[13] = {0};
+    qsort(&hands, n, sizeof(Hand), cmpfunc);
 
-    for (int i = 0; i < 5; ++i) {
-        ++(cards[get_index(hands[0].cards[i])]);
-    }
+    long long result = 0;
 
-    Strength strength = get_strength(cards);
+    for (int i = 0; i < n; ++i)
+        result += (i+1) * hands[i].bid;
 
-    int result = 0;
-
-    printf("Answer: %d\n", result);
+    printf("Answer: %lld\n", result);
 
     return 0;
 }
@@ -76,20 +93,26 @@ int get_index(char ch) {
     return -1;
 }
 
-Strength get_strength(int cards[13]) {
+Strength get_strength(int cards[5]) {
+    int count[13] = {0};
+
+    for (int i = 0; i < 5; ++i)
+        ++(count[cards[i]]);
+
     bool three_of_a_kind = false;
     bool pair = false;
+
     for (int i = 0; i < 13; ++i) {
-        if (cards[i] == 5)
+        if (count[i] == 5)
             return FiveOfAKind;
-        if (cards[i] == 4)
+        if (count[i] == 4)
             return FourOfAKind;
-        if (cards[i] == 3) {
+        if (count[i] == 3) {
             if (pair)
                 return FullHouse;
             three_of_a_kind = true;
         }
-        else if (cards[i] == 2) {
+        else if (count[i] == 2) {
             if (pair)
                 return TwoPair;
             if (three_of_a_kind)
